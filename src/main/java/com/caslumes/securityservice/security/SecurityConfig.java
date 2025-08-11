@@ -62,7 +62,11 @@ public class SecurityConfig {
                                 )
 
                                 .requestMatchers(POST, "/api/users/save/**")
-                                .hasAnyAuthority(ROLE_ADMIN.getRoleName())
+                                .hasAnyAuthority(
+                                        ROLE_MANAGER.getRoleName(),
+                                        ROLE_ADMIN.getRoleName(),
+                                        ROLE_SUPER_ADMIN.getRoleName()
+                                )
 
                                 .anyRequest()
                                 .authenticated()
