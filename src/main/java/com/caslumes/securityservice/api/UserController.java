@@ -46,9 +46,9 @@ public class UserController {
         return ResponseEntity.created(uri).body(userService.saveUser(user));
     }
 
-    @DeleteMapping("/users")
-    public ResponseEntity<?> deleteUser(@RequestBody Map<String, Long> user){
-        userService.deleteUser(user.get("userId"));
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId){
+        userService.deleteUser(userId);
         return ResponseEntity.ok().build();
     }
 
@@ -58,9 +58,9 @@ public class UserController {
         return ResponseEntity.created(uri).body(userService.saveRole(role));
     }
 
-    @DeleteMapping("/role")
-    public ResponseEntity<?> deleteRole(@RequestBody Map<String, Long> role){
-        userService.deleteRole(role.get("roleId"));
+    @DeleteMapping("/role/{roleId}")
+    public ResponseEntity<?> deleteRole(@PathVariable Long roleId){
+        userService.deleteRole(roleId);
         return ResponseEntity.ok().build();
     }
 

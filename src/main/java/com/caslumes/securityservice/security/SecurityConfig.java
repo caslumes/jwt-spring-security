@@ -52,12 +52,17 @@ public class SecurityConfig {
                                 .requestMatchers("/error")
                                 .permitAll()
 
-                        .requestMatchers(DELETE, "/api/users/**").permitAll()
-
                                 .requestMatchers(GET, "/api/users/**")
                                 .hasAnyAuthority(
                                         ROLE_SUPER_ADMIN.getRoleName(),
                                         ROLE_USER.getRoleName(),
+                                        ROLE_MANAGER.getRoleName(),
+                                        ROLE_ADMIN.getRoleName()
+                                )
+
+                                .requestMatchers(DELETE, "/api/users/**")
+                                .hasAnyAuthority(
+                                        ROLE_SUPER_ADMIN.getRoleName(),
                                         ROLE_MANAGER.getRoleName(),
                                         ROLE_ADMIN.getRoleName()
                                 )
