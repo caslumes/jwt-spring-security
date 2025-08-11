@@ -17,8 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import static com.caslumes.securityservice.model.role.RoleName.*;
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.*;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration
@@ -53,6 +52,8 @@ public class SecurityConfig {
                                 .requestMatchers("/error")
                                 .permitAll()
 
+                        .requestMatchers(DELETE, "/api/users/**").permitAll()
+
                                 .requestMatchers(GET, "/api/users/**")
                                 .hasAnyAuthority(
                                         ROLE_SUPER_ADMIN.getRoleName(),
@@ -62,6 +63,20 @@ public class SecurityConfig {
                                 )
 
                                 .requestMatchers(POST, "/api/users/save/**")
+                                .hasAnyAuthority(
+                                        ROLE_MANAGER.getRoleName(),
+                                        ROLE_ADMIN.getRoleName(),
+                                        ROLE_SUPER_ADMIN.getRoleName()
+                                )
+
+                                .requestMatchers(POST, "/api/role/save/**")
+                                .hasAnyAuthority(
+                                        ROLE_MANAGER.getRoleName(),
+                                        ROLE_ADMIN.getRoleName(),
+                                        ROLE_SUPER_ADMIN.getRoleName()
+                                )
+
+                                .requestMatchers(POST, "/api/role/addtouser/**")
                                 .hasAnyAuthority(
                                         ROLE_MANAGER.getRoleName(),
                                         ROLE_ADMIN.getRoleName(),

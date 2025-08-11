@@ -7,7 +7,9 @@ import java.util.List;
 
 public interface UserService {
     User saveUser(User user);
+    void deleteUser(Long userId);
     Role saveRole(Role role);
+    void deleteRole(Long roleId);
     void addRoleToUser(String username, String roleName);
     User getUser(String username);
     List<User> getUsers();

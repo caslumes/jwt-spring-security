@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,9 +34,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if(user == null){
             log.error("User not found in the DB: {}.", username);
             throw new UsernameNotFoundException(String.format("User not found in the DB: %s.", username));
-        }else{
-            log.info("User found in the DB: {}.", username);
         }
+
+        log.info("User found in the DB: {}.", username);
 
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         user.getRoles().forEach(role -> {
@@ -57,9 +58,35 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
+    public void deleteUser(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+
+        if(user.isEmpty()){
+            log.error("User with id {} not found in the DB.", userId);
+            throw new UsernameNotFoundException(String.format("User with id %d not found in the DB.", userId));
+        }
+
+        log.info("Deleting user {} from the DB.", user.get().getName());
+        userRepository.deleteById(userId);
+    }
+
+    @Override
     public Role saveRole(Role role) {
         log.info("Saving new role {} to the DB.", role.getName());
         return roleRepository.save(role);
+    }
+
+    @Override
+    public void deleteRole(Long roleId) {
+        Optional<Role> role = roleRepository.findById(roleId);
+
+        if(role.isEmpty()){
+            log.error("Role with id {} not found in the DB.", roleId);
+            throw new UsernameNotFoundException(String.format("Role with id %d not found in the DB.", roleId));
+        }
+
+        log.info("Deleting role {} from the DB.", role.get().getName());
+        roleRepository.deleteById(roleId);
     }
 
     @Override
