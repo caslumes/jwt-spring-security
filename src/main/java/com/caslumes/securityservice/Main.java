@@ -3,6 +3,7 @@ package com.caslumes.securityservice;
 import com.caslumes.securityservice.model.role.Role;
 import com.caslumes.securityservice.model.user.User;
 import com.caslumes.securityservice.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,7 +15,6 @@ import static com.caslumes.securityservice.model.role.RoleName.*;
 
 @SpringBootApplication
 public class Main {
-
 	public static void main(String[] args) {
 		SpringApplication.run(Main.class, args);
 	}
