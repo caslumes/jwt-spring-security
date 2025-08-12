@@ -2,6 +2,7 @@ package com.caslumes.securityservice.security;
 
 import com.caslumes.securityservice.filter.CustomAuthenticationFilter;
 import com.caslumes.securityservice.filter.CustomAuthorizationFilter;
+import com.caslumes.securityservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final UserDetailsService userDetailsService;
+    private final UserService userService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final UrlBasedCorsConfigurationSource corsConfigurationSource;
 
@@ -38,7 +40,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authManager) throws Exception {
-        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authManager);
+        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authManager, userService);
         customAuthenticationFilter.setFilterProcessesUrl("/api/login");
 
         http

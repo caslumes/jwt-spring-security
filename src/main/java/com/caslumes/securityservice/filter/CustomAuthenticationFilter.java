@@ -2,13 +2,16 @@ package com.caslumes.securityservice.filter;
 
 import com.auth0.jwt.algorithms.Algorithm;
 import com.caslumes.securityservice.jwt.JWTGenerator;
+import com.caslumes.securityservice.service.UserService;
 import com.caslumes.securityservice.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,12 +27,10 @@ import java.util.Map;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Slf4j
+@RequiredArgsConstructor
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
-
-    public CustomAuthenticationFilter(AuthenticationManager authenticationManager){
-        this.authenticationManager = authenticationManager;
-    }
+    private final UserService userService;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -52,11 +53,11 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         String refresh_token = JWTGenerator.generateRefreshToken(request, user, algorithm, Utils.getRefreshTokenExpirationSpan());
 
-        Map<String, String> tokens = new HashMap<>();
+        Map<String, Object> responseBody = new HashMap<>();
 
-        tokens.put("access_token", access_token);
-        tokens.put("refresh_token", refresh_token);
-        response.setContentType(APPLICATION_JSON_VALUE);
+        responseBody.put("access_token", access_token);
+        responseBody.put("refresh_token", refresh_token);
+        responseBody.put("user", userService.getUser(user.getUsername()));
 
 //        Cookie jwtCookie = new Cookie("jwtToken", access_token);
 //        jwtCookie.setHttpOnly(true);
@@ -67,6 +68,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 //
 //        response.addCookie(jwtCookie);
 
-        new ObjectMapper().writeValue(response.getOutputStream(), tokens);
+        response.setContentType(APPLICATION_JSON_VALUE);
+        new ObjectMapper().writeValue(response.getOutputStream(), responseBody);
     }
 }

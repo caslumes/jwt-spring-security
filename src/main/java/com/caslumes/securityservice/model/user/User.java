@@ -1,6 +1,7 @@
 package com.caslumes.securityservice.model.user;
 
 import com.caslumes.securityservice.model.role.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class User {
     private Long id;
     private String name;
     private String username;
+    @JsonIgnore
     private String password;
     @ManyToMany(fetch = EAGER)
     private Collection<Role> roles = new ArrayList<>();
