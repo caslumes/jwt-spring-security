@@ -6,12 +6,11 @@ import com.caslumes.securityservice.service.UserService;
 import com.caslumes.securityservice.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -45,7 +44,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException {
         User user = (User) authResult.getPrincipal();
         Algorithm algorithm = Utils.getJwtAlgorithm();
 
@@ -56,17 +55,21 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         Map<String, Object> responseBody = new HashMap<>();
 
         responseBody.put("access_token", access_token);
-        responseBody.put("refresh_token", refresh_token);
         responseBody.put("user", userService.getUser(user.getUsername()));
 
-//        Cookie jwtCookie = new Cookie("jwtToken", access_token);
-//        jwtCookie.setHttpOnly(true);
-//        jwtCookie.setSecure(true);
-//        jwtCookie.setPath("/");
-//        int maxAge = (int) Duration.between(LocalDate.now(), LocalDate.from(Instant.ofEpochMilli(Utils.getRefreshTokenExpirationSpan()))).getSeconds();
-//        jwtCookie.setMaxAge(maxAge);
-//
-//        response.addCookie(jwtCookie);
+        long refreshTokenExpirationSpanMillis = Utils.getRefreshTokenExpirationSpan().getTime() - new Date(System.currentTimeMillis()).getTime();
+        int maxAge = (int) refreshTokenExpirationSpanMillis/1000;
+
+        ResponseCookie resCookie = ResponseCookie.from("refresh_token", refresh_token)
+                .httpOnly(true)
+                .sameSite("None")
+                .domain("localhost")
+                .secure(true)
+                .path("/")
+                .maxAge(maxAge)
+                .build();
+
+        response.addHeader("Set-Cookie", resCookie.toString());
 
         response.setContentType(APPLICATION_JSON_VALUE);
         new ObjectMapper().writeValue(response.getOutputStream(), responseBody);

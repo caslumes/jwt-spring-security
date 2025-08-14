@@ -34,3 +34,8 @@ build/
 
 ### ENV ###
 .env
+
+### SSL LOCAL CERTIFICATE ###
+/src/main/resources/localhost-key.pem
+/src/main/resources/localhost.pem
+/src/main/resources/keystore.p12

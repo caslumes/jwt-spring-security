@@ -21,7 +21,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
@@ -31,7 +30,6 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class UserController {
     private final UserService userService;
 
@@ -57,6 +55,40 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/users/me")
+    public void getUserByAccessToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String authorizationHeader = request.getHeader(AUTHORIZATION);
+        if(authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
+            try {
+                String refresh_token = authorizationHeader.substring("Bearer ".length());
+                Algorithm algorithm = Utils.getJwtAlgorithm();
+
+                JWTVerifier verifier = JWT.require(algorithm).build();
+                DecodedJWT decodedJWT = verifier.verify(refresh_token);
+
+                String username = decodedJWT.getSubject();
+                User user = userService.getUser(username);
+
+                new ObjectMapper().writeValue(response.getOutputStream(), user);
+
+                return;
+            } catch (Exception e) {
+                log.error("Error logging in: {}", e.getMessage());
+                response.setHeader("error", e.getMessage());
+                response.setStatus(FORBIDDEN.value());
+
+                Map<String, String> error = new HashMap<>();
+
+                error.put("error_message", e.getMessage());
+                response.setContentType(APPLICATION_JSON_VALUE);
+
+                new ObjectMapper().writeValue(response.getOutputStream(), error);
+            }
+
+            throw new RuntimeException("Refresh token is missing.");
+        }
+    }
+
     @PostMapping("/role/save")
     public ResponseEntity<Role> saveRole(@RequestBody Role role){
         URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/role/save").toUriString());
@@ -76,7 +108,7 @@ public class UserController {
     }
 
     @GetMapping("/token/refresh")
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response, @CookieValue(name = "refresh_token", required = false) String refreshTokenCookie) throws IOException {
         String authorizationHeader = request.getHeader(AUTHORIZATION);
         if(authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
             try {
@@ -95,6 +127,43 @@ public class UserController {
 
                 tokens.put("access_token", access_token);
                 tokens.put("refresh_token", refresh_token);
+                response.setContentType(APPLICATION_JSON_VALUE);
+
+                new ObjectMapper().writeValue(response.getOutputStream(), tokens);
+
+                return;
+            } catch (Exception e) {
+                log.error("Error logging in: {}", e.getMessage());
+                response.setHeader("error", e.getMessage());
+                response.setStatus(FORBIDDEN.value());
+
+                Map<String, String> error = new HashMap<>();
+
+                error.put("error_message", e.getMessage());
+                response.setContentType(APPLICATION_JSON_VALUE);
+
+                new ObjectMapper().writeValue(response.getOutputStream(), error);
+            }
+
+            throw new RuntimeException("Refresh token is missing.");
+        }
+
+        if(refreshTokenCookie != null && !refreshTokenCookie.isBlank()){
+            try {
+                Algorithm algorithm = Utils.getJwtAlgorithm();
+
+                JWTVerifier verifier = JWT.require(algorithm).build();
+                DecodedJWT decodedJWT = verifier.verify(refreshTokenCookie);
+
+                String username = decodedJWT.getSubject();
+                User user = userService.getUser(username);
+
+                String access_token = JWTGenerator.refreshAccessToken(request, user, algorithm, Utils.getAccessTokenExpirationSpan());
+
+                Map<String, String> tokens = new HashMap<>();
+
+                tokens.put("access_token", access_token);
+                tokens.put("refresh_token", refreshTokenCookie);
                 response.setContentType(APPLICATION_JSON_VALUE);
 
                 new ObjectMapper().writeValue(response.getOutputStream(), tokens);
